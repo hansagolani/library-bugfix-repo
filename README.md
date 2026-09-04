@@ -88,9 +88,12 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
-- **`deleteBook`/`deleteMember` don't check resource existence before calling
-  `deleteById()`.** A non-existent ID currently throws Spring Data's raw
-  `EmptyResultDataAccessException` instead of the app's clean 404. Same root
-  cause, same fix pattern, in two places — a good candidate for a single
-  bug writeup that covers both.
-- *(more to be added as they're planted)*
+- *(to be added as they're planted)*
+
+### Planted and fixed bugs 
+- ** `deleteBook`/`deleteMember` Delete on non-existent ID silently returned 204 
+  instead of 404. deleteById() in Spring Data JPA no-ops if the ID doesn't exist, 
+  rather than throwing — so DELETE /api/books/99999 returned a false success. 
+  Found by testing delete against a known-invalid ID and inspecting the response, 
+  not by reading an exception trace. Fixed by checking existsById() before calling 
+  deleteById(), throwing ResourceNotFoundException when missing.
