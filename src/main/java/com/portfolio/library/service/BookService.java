@@ -69,6 +69,9 @@ public class BookService {
     }
 
     public void deleteBook(Long id) {
+        if (!bookRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Book not found with id : " + id);
+        }
         List<Loan> currentLoans = loanRepository.findByBookIdAndReturnDateIsNull(id);
         if (!currentLoans.isEmpty()) {
             throw new InvalidOperationException("Cannot delete a book with active loans.");

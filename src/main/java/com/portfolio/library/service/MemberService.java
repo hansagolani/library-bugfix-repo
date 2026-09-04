@@ -51,6 +51,9 @@ public class MemberService {
     }
 
     public void deleteMember(Long id) {
+        if (!memberRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Member not found with id : " + id);
+        }
         List<Loan> currentLoans = loanRepository.findByMemberIdAndReturnDateIsNull(id);
         if (!currentLoans.isEmpty()) {
             throw new InvalidOperationException("Cannot delete a member with active loans.");
