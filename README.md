@@ -88,7 +88,14 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
-- *(to be added as they're planted)*
+- **Bug planted: missing transaction boundary in checkoutBook(). 
+  Removed @Transactional to demonstrate the risk: the checkout flow does two 
+  separate writes — decrementing/saving the Book's availableCopies, then 
+  creating/saving the Loan — with nothing tying them together. If the process 
+  failed between those two writes (crash, dropped DB connection), 
+  the book's copy count would be decremented with no Loan record to explain why, 
+  silently corrupting the data with no error raised.
+- *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
 - ** `deleteBook`/`deleteMember` Delete on non-existent ID silently returned 204 
