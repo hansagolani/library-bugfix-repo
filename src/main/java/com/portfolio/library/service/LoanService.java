@@ -45,6 +45,7 @@ public class LoanService {
      * - What update needs to happen to the book's availableCopies?
      */
 
+    @Transactional
     public LoanDTO checkoutBook(Long bookId, Long memberId) {
         // 1. Check if the book already exists
         Book book = bookRepository.findById(bookId)

@@ -88,13 +88,6 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
-- **Bug planted: missing transaction boundary in checkoutBook(). 
-  Removed @Transactional to demonstrate the risk: the checkout flow does two 
-  separate writes — decrementing/saving the Book's availableCopies, then 
-  creating/saving the Loan — with nothing tying them together. If the process 
-  failed between those two writes (crash, dropped DB connection), 
-  the book's copy count would be decremented with no Loan record to explain why, 
-  silently corrupting the data with no error raised.
 - *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
@@ -103,4 +96,10 @@ testing the baseline, before `v1.0` was tagged.
   rather than throwing — so DELETE /api/books/99999 returned a false success. 
   Found by testing delete against a known-invalid ID and inspecting the response, 
   not by reading an exception trace. Fixed by checking existsById() before calling 
-  deleteById(), throwing ResourceNotFoundException when missing.
+  deleteById(), throwing ResourceNotFoundException when missing. 
+- ** Fixed: missing transaction boundary in checkoutBook(). 
+  Restored @Transactional on the method. The Book update and Loan creation now happen 
+  inside a single database transaction — either both commit or both roll back, so the 
+  two writes can never drift out of sync. (Not caught by reproducing an actual crash 
+  — hard to force deterministically — but identified by tracing the method and asking 
+  "what happens if this fails halfway through?")
