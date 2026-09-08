@@ -14,9 +14,8 @@ root-cause-analysis skills after a career break.
 ## Status
 ✅ Baseline complete and verified end-to-end (checkout/return flow, validation,
 error handling, duplicate/not-found/business-rule cases all tested manually
-via curl/Postman). This is the `v1.0` reference point — bugs will be planted
-on top of this in separate branches/commits, each with its own root-cause
-writeup below.
+via curl/Postman). Bugs were planted and fixed on top of `v1.0` reference point in 
+separate branches/commits, each with its own root-cause writeup below.
 
 ## How to run
 ```bash
@@ -87,30 +86,40 @@ testing the baseline, before `v1.0` was tagged.
   consistent error body. Fix: added a `MethodArgumentNotValidException`
   handler that extracts just the field name and message into a plain map.
 
-### Candidate bugs — to be deliberately planted and documented
-- Bug found: updateBook() didn't check ISBN uniqueness. createBook() validates 
-  ISBN uniqueness before saving; updateBook() doesn't have the equivalent check.
-- *(more to be added as they're planted)*
+### Found and fixed after the v1.0 baseline
+- **Fixed: delete on a non-existent ID returned 204 instead of 404.**
+  deleteById() in Spring Data JPA no-ops if the ID doesn't exist,
+  rather than throwing — so DELETE /api/books/99999 returned a false success.
+  Found by testing delete against a known-invalid ID and inspecting the response,
+  not by reading an exception trace. Fixed by checking existsById() before calling
+  deleteById(), throwing ResourceNotFoundException when missing.
+- **Fixed: N+1 query on GET /api/books.**
+  Added a JOIN FETCH query (findAllWithLoans())
+  to BookRepository, replacing the default findAll() in getAllBooks(). This fetches
+  all books and their associated loans in a single query instead of one query per book —
+  confirmed by re-running the same test: the 3-query SQL log from before dropped to a
+  single query.
+- **Fixed: no validation on Book copy counts.**
+  Added @Min(0) to both totalCopies and
+  availableCopies on the Book entity. Retesting the same request now returns a clean 400
+  with a field-level message ("must be greater than or equal to 0") instead of silently
+  accepting invalid data.
+- **Fixed: updateBook() didn't check ISBN uniqueness.**
+  createBook() validates ISBN uniqueness before saving; updateBook() didn't have the
+  equivalent check, so updating a book's ISBN to one already in use hit the raw H2 unique-
+  constraint violation — returning a generic 500 Internal Server Error with no useful message.
+  Fixed two ways: (1) added an existsByIsbn check in updateBook() giving a precise 409
+  "ISBN already exists" error; (2) added a DataIntegrityViolationException handler in
+  GlobalExceptionHandler as a backstop for the residual race-condition window between the
+  check and the save, where two concurrent updates could both pass the check before either
+  commits. The two exist for different reasons — the check protects the client-facing error
+  message, the handler protects against the write-time race the check alone can't fully close.
 
 ### Planted and fixed bugs 
-- ** `deleteBook`/`deleteMember` Delete on non-existent ID silently returned 204 
-  instead of 404. deleteById() in Spring Data JPA no-ops if the ID doesn't exist, 
-  rather than throwing — so DELETE /api/books/99999 returned a false success. 
-  Found by testing delete against a known-invalid ID and inspecting the response, 
-  not by reading an exception trace. Fixed by checking existsById() before calling 
-  deleteById(), throwing ResourceNotFoundException when missing. 
-- ** Fixed: missing transaction boundary in checkoutBook(). 
+- **Fixed: missing transaction boundary in checkoutBook().** 
   Restored @Transactional on the method. The Book update and Loan creation now happen 
   inside a single database transaction — either both commit or both roll back, so the 
   two writes can never drift out of sync. (Not caught by reproducing an actual crash 
   — hard to force deterministically — but identified by tracing the method and asking 
   "what happens if this fails halfway through?")
-- ** Fixed: N+1 query on GET /api/books. Added a JOIN FETCH query (findAllWithLoans()) 
-  to BookRepository, replacing the default findAll() in getAllBooks(). This fetches 
-  all books and their associated loans in a single query instead of one query per book — 
-  confirmed by re-running the same test: the 3-query SQL log from before dropped to a 
-  single query.
-- ** Fixed: no validation on Book copy counts. Added @Min(0) to both totalCopies and 
-  availableCopies on the Book entity. Retesting the same request now returns a clean 400 
-  with a field-level message ("must be greater than or equal to 0") instead of silently 
-  accepting invalid data.
+ 
