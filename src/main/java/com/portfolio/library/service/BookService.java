@@ -57,14 +57,19 @@ public class BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
 
-        // 2. Map the updated fields to the managed entity
+        // 2. Check if a change in Isbn doesn't violate uniqueness constraint
+        if (!book.getIsbn().equals(updatedBook.getIsbn()) && bookRepository.existsByIsbn(updatedBook.getIsbn())) {
+            throw new DuplicateResourceException("Book with ISBN " + updatedBook.getIsbn() + " already exists");
+        }
+
+        // 3. Map the updated fields to the managed entity
         book.setTitle(updatedBook.getTitle());
         book.setAuthor(updatedBook.getAuthor());
         book.setIsbn(updatedBook.getIsbn());
         book.setTotalCopies(updatedBook.getTotalCopies());
         book.setAvailableCopies(updatedBook.getAvailableCopies());
 
-        // 3. Save and return the updated entity
+        // 4. Save and return the updated entity
         return BookDTO.fromEntity(bookRepository.save(book));
     }
 
