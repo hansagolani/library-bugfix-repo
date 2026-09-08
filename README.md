@@ -88,6 +88,13 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
+- Bug found: `N+1 query on GET /api/books`. Unlike the other bugs in this log, 
+  this wasn't planted — it was present in the baseline all along. Book.loans is a 
+  lazy @OneToMany, and BookDTO.fromEntity() calls book.getLoans() for every book. 
+  Fetching a list of books therefore runs one query for the books, then one additional 
+  query per book to fetch its loans — confirmed by inspecting the SQL logged with 
+  spring.jpa.show-sql=true while calling GET /api/books against a DB with 2 books: 
+  1 query for the books + 2 more (one per book) for loans, 3 queries total.
 - *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
