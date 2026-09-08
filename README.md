@@ -88,10 +88,6 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
-- ** Bug found: no validation on Book copy counts. totalCopies/availableCopies had no 
-  lower-bound constraint, so POST /api/books with negative values (e.g. totalCopies: -5) 
-  was accepted and persisted — confirmed by creating a book with -5 copies and getting 
-  a 201 back with the negative value intact.
 - *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
@@ -112,3 +108,7 @@ testing the baseline, before `v1.0` was tagged.
   all books and their associated loans in a single query instead of one query per book — 
   confirmed by re-running the same test: the 3-query SQL log from before dropped to a 
   single query.
+- ** Fixed: no validation on Book copy counts. Added @Min(0) to both totalCopies and 
+  availableCopies on the Book entity. Retesting the same request now returns a clean 400 
+  with a field-level message ("must be greater than or equal to 0") instead of silently 
+  accepting invalid data.

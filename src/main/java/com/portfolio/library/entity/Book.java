@@ -1,6 +1,7 @@
 package com.portfolio.library.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 
@@ -24,9 +25,11 @@ public class Book {
     private String isbn;
 
     /** Total copies the library owns of this title. */
+    @Min(0)
     private int totalCopies;
 
     /** Copies currently available to borrow (not out on loan). */
+    @Min(0)
     private int availableCopies;
 
     @OneToMany(mappedBy = "book")
