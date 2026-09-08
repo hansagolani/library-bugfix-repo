@@ -88,6 +88,8 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
+- Bug found: updateBook() didn't check ISBN uniqueness. createBook() validates 
+  ISBN uniqueness before saving; updateBook() doesn't have the equivalent check.
 - *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
