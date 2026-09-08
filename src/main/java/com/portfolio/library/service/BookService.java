@@ -28,7 +28,7 @@ public class BookService {
     }
 
     public List<BookDTO> getAllBooks() {
-        return bookRepository.findAll()
+        return bookRepository.findAllWithLoans()
                 .stream()
                 .map(BookDTO::fromEntity)
                 .toList();
