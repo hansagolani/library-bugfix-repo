@@ -88,6 +88,10 @@ testing the baseline, before `v1.0` was tagged.
   handler that extracts just the field name and message into a plain map.
 
 ### Candidate bugs — to be deliberately planted and documented
+- ** Bug found: no validation on Book copy counts. totalCopies/availableCopies had no 
+  lower-bound constraint, so POST /api/books with negative values (e.g. totalCopies: -5) 
+  was accepted and persisted — confirmed by creating a book with -5 copies and getting 
+  a 201 back with the negative value intact.
 - *(more to be added as they're planted)*
 
 ### Planted and fixed bugs 
